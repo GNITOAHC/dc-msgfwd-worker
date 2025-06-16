@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Upload to Discord</title>
+		<style>
+			#drop-area {
+				border: 2px dashed #999;
+				border-radius: 10px;
+				padding: 40px;
+				text-align: center;
+				transition: border-color 0.3s;
+			}
+			#drop-area.highlight {
+				border-color: purple;
+			}
+			#fileElem {
+				display: none;
+			}
+			#fileList {
+				margin-top: 10px;
+			}
+			.file-entry {
+				margin-bottom: 10px;
+			}
+		</style>
+		<script src="index.js" type="module"></script>
+	</head>
+	<body>
+		<h2>Upload to Discord</h2>
+
+		<button onclick="myFunction()" id="buttonq">Click Me</button>
+
+		<div id="drop-area">
+			<p>Drag & drop files here, or <button id="fileSelect" type="button">Select files</button></p>
+			<input type="file" id="fileElem" multiple />
+			<div id="fileList"></div>
+		</div>
+
+		<form id="uploadForm">
+			<input type="text" id="title" placeholder="Title" required /><br />
+			<textarea id="content" placeholder="Content" required></textarea><br />
+			<label>
+				<input type="checkbox" id="storeToDB" />
+				Store file URLs & descriptions to TursoDB
+			</label>
+			<br />
+			<button type="submit">Send to Discord</button>
+		</form>
+
+		<button onclick="list()" id="list">Click Me</button>
+		<div id="list"></div>
+
+		<script>
+			const dropArea = document.getElementById('drop-area');
+			const fileInput = document.getElementById('fileElem');
+			const fileSelect = document.getElementById('fileSelect');
+			const fileList = document.getElementById('fileList');
+			const storeToDB = document.getElementById('storeToDB');
+
+			let files = [];
+
+			// Prevent default drag behaviors on page
+			['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+				document.addEventListener(eventName, (e) => e.preventDefault(), false);
+				document.addEventListener(eventName, (e) => e.stopPropagation(), false);
+			});
+
+			// Highlight drop area
+			['dragenter', 'dragover'].forEach((eventName) => {
+				dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
+			});
+			['dragleave', 'drop'].forEach((eventName) => {
+				dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
+			});
+
+			// Handle dropped files
+			dropArea.addEventListener('drop', (e) => {
+				files = [...e.dataTransfer.files];
+				showFiles();
+			});
+
+			// Handle manual file selection
+			fileSelect.addEventListener('click', () => fileInput.click());
+			fileInput.addEventListener('change', (e) => {
+				files = [...fileInput.files];
+				showFiles();
+			});
+
+			function showFiles() {
+				fileList.innerHTML = '';
+				files.forEach((f, i) => {
+					const div = document.createElement('div');
+					div.className = 'file-entry';
+					div.innerHTML = `<p>${f.name}</p>`;
+					if (storeToDB.checked) {
+						const desc = document.createElement('input');
+						desc.type = 'text';
+						desc.placeholder = 'Description';
+						desc.name = `description_${i}`;
+						div.appendChild(desc);
+					}
+					fileList.appendChild(div);
+				});
+			}
+
+			storeToDB.addEventListener('change', () => {
+				showFiles();
+			});
+
+			document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+				e.preventDefault();
+				if (files.length === 0) {
+					alert('Please select or drop at least one file.');
+					return;
+				}
+
+				if (storeToDB.checked) {
+					// Validate descriptions
+					const descInputs = document.querySelectorAll('.file-entry input[type="text"]');
+					for (const input of descInputs) {
+						if (!input.value.trim()) {
+							alert('Please fill all descriptions.');
+							return;
+						}
+					}
+				}
+
+				const formData = new FormData();
+				formData.append('title', document.getElementById('title').value);
+				formData.append('content', document.getElementById('content').value);
+				formData.append('storeToDB', storeToDB.checked ? 'true' : 'false');
+
+				files.forEach((file) => formData.append('files', file));
+
+				if (storeToDB.checked) {
+					// Add descriptions
+					const descInputs = document.querySelectorAll('.file-entry input[type="text"]');
+					descInputs.forEach((input) => {
+						formData.append('descriptions', input.value);
+					});
+				}
+
+				const res = await fetch('/upload', {
+					method: 'POST',
+					body: formData,
+				});
+
+				if (res.ok) {
+					const data = await res.json();
+					console.log(data);
+					for (let i = 0; i < data.data.length; i++) {
+						alert(data.data[i]);
+					}
+					// alert('Uploaded!\nFile URLs:\n' + data.urls.join('\n'));
+					files = [];
+					fileList.innerHTML = '';
+					document.getElementById('uploadForm').reset();
+				} else {
+					alert('Upload failed');
+				}
+			});
+		</script>
+	</body>
+</html>
