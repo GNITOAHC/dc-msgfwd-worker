@@ -52,14 +52,12 @@ export default function UploadPage() {
       descriptions.forEach((desc) => formData.append("descriptions", desc));
     }
 
-    const res = await fetch("/upload", {
+    const res = await fetch("/api/upload", {
       method: "POST",
       body: formData,
     });
 
     if (res.ok) {
-      const data = await res.json();
-      data.data.forEach((msg: string) => alert(msg));
       setFiles([]);
       setTitle("");
       setContent("");
@@ -91,8 +89,7 @@ export default function UploadPage() {
             <p className="font-medium">{file.name}</p>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2 sm:mt-0">
               {storeToDB && (
-                <input
-                  type="text"
+                <textarea
                   placeholder="Description"
                   value={descriptions[index] || ""}
                   onChange={(e) =>
@@ -133,7 +130,7 @@ export default function UploadPage() {
           <input
             type="checkbox"
             checked={storeToDB}
-            onChange={handleStoreToDBChange}
+            onChange={(e) => handleStoreToDBChange(e)}
           />
           Store file URLs & descriptions to TursoDB
         </label>

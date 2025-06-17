@@ -12,7 +12,7 @@
  */
 
 import { upload } from './upload';
-import { list } from './list';
+import { getFiles, deleteFile } from './files';
 import { checkBasicAuth } from './auth';
 
 export default {
@@ -22,14 +22,17 @@ export default {
 
 		const url = new URL(request.url);
 
-		// console.log(url.pathname, request.method);
-
-		if (url.pathname === '/upload' && request.method === 'POST') {
+		if (url.pathname === '/api/upload' && request.method === 'POST') {
 			return upload(request, env, ctx);
 		}
 
-		if (url.pathname === '/list' && request.method === 'GET') {
-			return list(request, env, ctx);
+		if (url.pathname === '/api/files' && request.method === 'GET') {
+			return getFiles(request, env, ctx);
+		}
+
+		const deleteFilePattern = new URLPattern({ pathname: '/api/files/:id' });
+		if (deleteFilePattern.test(url) && request.method === 'DELETE') {
+			return deleteFile(request, env, ctx, deleteFilePattern);
 		}
 
 		const staticRes = await env.ASSETS.fetch(request);

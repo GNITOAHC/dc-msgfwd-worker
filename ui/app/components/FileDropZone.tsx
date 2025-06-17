@@ -1,8 +1,9 @@
+"use client";
 import React, { useRef, useState } from "react";
 
 export interface FileDropZoneProps {
   files: File[];
-  setFiles: (files: File[]) => void;
+  setFiles(files: File[]): void;
 }
 
 export default function FileDropZone({ files, setFiles }: FileDropZoneProps) {
@@ -41,10 +42,10 @@ export default function FileDropZone({ files, setFiles }: FileDropZoneProps) {
       className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors cursor-pointer ${
         highlight ? "border-purple-500" : "border-gray-400"
       }`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      onClick={handleFileSelect}
+      onDragOver={(e) => handleDragOver(e)}
+      onDragLeave={() => handleDragLeave()}
+      onDrop={(e) => handleDrop(e)}
+      onClick={() => handleFileSelect()}
     >
       {files.length === 0 ? (
         <p>

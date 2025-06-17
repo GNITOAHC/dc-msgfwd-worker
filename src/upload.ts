@@ -1,6 +1,6 @@
 import { buildLibsqlClient } from './turso';
 
-export async function upload(request: Request, env: Env, ctx: ExecutionContext) {
+export async function upload(request: Request, env: Env, _: ExecutionContext) {
 	const form = await request.formData();
 	const files = form.getAll('files') as File[];
 	const title = form.get('title');
